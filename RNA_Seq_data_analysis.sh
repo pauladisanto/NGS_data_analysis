@@ -1,8 +1,4 @@
-xdisga@gu.se
-$_X&8B7Tb
-
-ssh -Y student7@antares.sa.gu.lcl
-fwLLIfcDc/gB5g
+ssh -Y user7@antares.sa.gu.lcl
 
 
 #to load the packages
@@ -61,7 +57,7 @@ for i in  *.bam; do samtools idxstats $i > ${i%.bam}.idxstats; done
 
 multiqc_report.html
 
-#scp -p student7@antares.sa.gu.lcl:/home/student7/RNAseq/multiqc_report.html .
+#scp -p user7@antares.sa.gu.lcl:/home/user7/RNAseq/multiqc_report.html .
 
 #The header of the alignment file contains information of used chromosomes, as well as command lines used to generate the BAM file among others. 
 #This can be handy if you don't know how the alignment was created.
@@ -99,7 +95,7 @@ awk '$1 == "chr21" || $1 == "21"' hg38_RefSeq.bed > hg38_RefSeq_chr21.bed
 for bam_file in SRS*.bam; do
     output_file="${bam_file}.infer_experiment"
 
-    infer_experiment.py -r /home/student7/RNAseq/db/hg38_RefSeq_chr21.bed -i "$bam_file" > "$output_file"
+    infer_experiment.py -r /home/user7/RNAseq/db/hg38_RefSeq_chr21.bed -i "$bam_file" > "$output_file"
 
     echo "Infer experiment results for $bam_file written to $output_file"
 done
@@ -109,9 +105,9 @@ done
 
 #geneBody_coverage.py -i BAM_FILE1,BAM_FILE2,BAM_FILE3,... -r LOCATION_OF_YOUR_FILE/hg38_RefSeq_chr21.bed -o geneBodyCoverage 
 
-geneBody_coverage.py -i  SRS*.bam -r /home/student7/RNAseq/db/hg38_RefSeq_chr21.bed -o geneBodyCoverage 
+geneBody_coverage.py -i  SRS*.bam -r /home/user7/RNAseq/db/hg38_RefSeq_chr21.bed -o geneBodyCoverage 
 
-#scp -p student7@antares.sa.gu.lcl:/home/student7/RNAseq/Alignment/geneBodyCoverage.geneBodyCoverage.curves.pdf .
+#scp -p user7@antares.sa.gu.lcl:/home/user7/RNAseq/Alignment/geneBodyCoverage.geneBodyCoverage.curves.pdf .
 
 #Gene counts
 #The next step is to count the amount of reads aligned towards the genes in the reference genome so we can assess gene expression. 
@@ -128,7 +124,7 @@ geneBody_coverage.py -i  SRS*.bam -r /home/student7/RNAseq/db/hg38_RefSeq_chr21.
 
 #featureCounts -p --countReadPairs -s FLAG_FOR_UNSTRANDED_DATA -t exon -a LOCATION_OF_YOUR_FILE/Homo_sapiens.GRCh38.109.chr21.gtf -o COUNTS_DIRECTORY/21.counts YOUR_BAM_FILES_SEPARATED_BY_SPACE
 
-featureCounts -p --countReadPairs -s 0 -t exon -a /home/student7/RNAseq/db/Homo_sapiens.GRCh38.109.chr21.gtf -o /home/student7/RNAseq/Counts/21.counts SRS308866Aligned.sortedByCoord.out_chr21.bam SRS308874Aligned.sortedByCoord.out_chr21.bam SRS308882Aligned.sortedByCoord.out_chr21.bam SRS308868Aligned.sortedByCoord.out_chr21.bam SRS308876Aligned.sortedByCoord.out_chr21.bam SRS308883Aligned.sortedByCoord.out_chr21.bam SRS308870Aligned.sortedByCoord.out_chr21.bam SRS308878Aligned.sortedByCoord.out_chr21.bam SRS308885Aligned.sortedByCoord.out_chr21.bam SRS308872Aligned.sortedByCoord.out_chr21.bam SRS308880Aligned.sortedByCoord.out_chr21.bam SRS308887Aligned.sortedByCoord.out_chr21.bam
+featureCounts -p --countReadPairs -s 0 -t exon -a /home/user7/RNAseq/db/Homo_sapiens.GRCh38.109.chr21.gtf -o /home/user7/RNAseq/Counts/21.counts SRS308866Aligned.sortedByCoord.out_chr21.bam SRS308874Aligned.sortedByCoord.out_chr21.bam SRS308882Aligned.sortedByCoord.out_chr21.bam SRS308868Aligned.sortedByCoord.out_chr21.bam SRS308876Aligned.sortedByCoord.out_chr21.bam SRS308883Aligned.sortedByCoord.out_chr21.bam SRS308870Aligned.sortedByCoord.out_chr21.bam SRS308878Aligned.sortedByCoord.out_chr21.bam SRS308885Aligned.sortedByCoord.out_chr21.bam SRS308872Aligned.sortedByCoord.out_chr21.bam SRS308880Aligned.sortedByCoord.out_chr21.bam SRS308887Aligned.sortedByCoord.out_chr21.bam
 #-s FLAG_FOR_UNSTRANDED_DATA: Specify the strand specificity. 
 #Replace FLAG_FOR_UNSTRANDED_DATA with one of the following options based on your data:
 
@@ -143,9 +139,9 @@ mkdir DESeq2
 #Create such a matrix from the count file from the featureCounts step.
 
 #copy the R things to my computer
-scp -p student7@antares.sa.gu.lcl:/home/student7/RNAseq/Counts/* .
+scp -p user7@antares.sa.gu.lcl:/home/user7/RNAseq/Counts/* .
 
-scp -p student7@antares.sa.gu.lcl:/home/ftp_courses/NGS/RNAseq/forDE/* .
+scp -p user7@antares.sa.gu.lcl:/home/ftp_courses/NGS/RNAseq/forDE/* .
 
 #Now you will use DESeq2, an R package that estimates variance-mean dependence in count data from high-throughput sequencing 
 #assays and tests for differential expression based on a model using the negative binomial distribution. 
