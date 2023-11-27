@@ -5,15 +5,7 @@ ssh -Y user7@antares.sa.gu.lcl
 module load _program_name/version
 module load blast+/2.14 fastqc/0.12.1 igv/2.16.1 multiqc/1.14 rseqc/5.0.1 R/4.3.1 samtools/1.17 subread/2.0.6
 
-#Alignment QC
-
-#As you have already performed the quality filtering and alignment steps in previous exercises, we are taking on the analysis from the alignment files. So, just to refresh our minds:
-#Q. What are the typical steps you perform to obtain the alignment file?
-
-#Note: Due to time limit, we will be working with a subset of the data, that corresponds to chr21. Besides, we will be practicing using the for loop to automate tasks since we are dealing with 12 samples and it would be a lot of typing if you do one sample at the time!
-#Create an RNAseq folder in your home directory
-#You can directly create a soft link to the actual folders, but let's practice the for loop
-#Within the directory, create the folders db, Alignment and Counts.
+# This pipeline is after the aligment step
 
 mkdir RNAseq
 mkdir db
@@ -21,23 +13,15 @@ mkdir Alignment
 mkdir Counts
 
 
-#Create links to:
-
-#Alignment files from /home/ftp_courses/NGS/RNAseq/Alignment_chr21/ to your Alignment directory. You can use a for loop for this:
+#Create links 
 
 for i in /home/ftp_courses/NGS/RNAseq/Alignment_chr21/*; do ln -s $i Alignment/; done
-
-#Database files from /home/ftp_courses/NGS/RNAseq/db to your db directory. Use a for loop as in the example above.
-# unlink symbolic_link_name
 
 for i in /home/ftp_courses/NGS/RNAseq/db/*; do ln -s $i db/; done
 
 #Alignment QC with samtools
 
-#Samtools is a great tool to gather the alignment statistics.
-#Go into your Alignment directory and index your BAM files:
-#NOTE: Remember that we can use a loop to run a command on multiple samples. See example on how to do it below
-
+#Samtools to gather the alignment statistics.
 for i in *bam; do samtools index $i; done
 
 #Create statistics files using flagstat and idxstats for each sample:
@@ -48,13 +32,7 @@ for i in  *.bam; do samtools flagstat $i > ${i%.bam}.flagstat; done
 
 for i in  *.bam; do samtools idxstats $i > ${i%.bam}.idxstats; done
 
-#Run fastqc on each sample
-
-
 #Merge the results with multiqc
-
-#Have a look at the multiqc HTML report.
-
 multiqc_report.html
 
 #scp -p user7@antares.sa.gu.lcl:/home/user7/RNAseq/multiqc_report.html .
@@ -77,20 +55,10 @@ samtools view -H SRS308866Aligned.sortedByCoord.out_chr21.bam
 #Before running RSeQC, let's prepare the reference gene model file (-r):
 #hg38_RefSeq.bed has the annotation for all genes, but since we are just focusing on chr21, it will be quicker to have a subset of the bed file.
 
-#Create a new file with only genes belonging to chr21 (use grep or awk)
-#Save it as hg38_RefSeq_chr21.bed under your db directory
-
+#Create a new file with only genes belonging to chr21 
 awk '$1 == "chr21" || $1 == "21"' hg38_RefSeq.bed > hg38_RefSeq_chr21.bed
 
-#Run infer_experiment.py. Try to use a for loop to automate your analysis:
-
-#infer_experiment.py -r LOCATION_OF_YOUR_FILE/hg38_RefSeq_chr21.bed -i YOUR_BAM_FILE > YOUR_BAM_FILE.infer_experiment
-#SRS308866Aligned.sortedByCoord.out_chr21.bam  SRS308874Aligned.sortedByCoord.out_chr21.bam  SRS308882Aligned.sortedByCoord.out_chr21.bam
-#SRS308868Aligned.sortedByCoord.out_chr21.bam  SRS308876Aligned.sortedByCoord.out_chr21.bam  SRS308883Aligned.sortedByCoord.out_chr21.bam
-#SRS308870Aligned.sortedByCoord.out_chr21.bam  SRS308878Aligned.sortedByCoord.out_chr21.bam  SRS308885Aligned.sortedByCoord.out_chr21.bam
-#SRS308872Aligned.sortedByCoord.out_chr21.bam  SRS308880Aligned.sortedByCoord.out_chr21.bam  SRS308887Aligned.sortedByCoord.out_chr21.bam
-#!/bin/bash
-
+#Run infer_experiment.py. 
 # Assuming all BAM files are in the current directory and follow the pattern SRS*.bam
 for bam_file in SRS*.bam; do
     output_file="${bam_file}.infer_experiment"
@@ -100,6 +68,7 @@ for bam_file in SRS*.bam; do
     echo "Infer experiment results for $bam_file written to $output_file"
 done
 
+#=============================================================================================
 #Sometimes you can have problems with the RNA being fragmented (e.g degraded). You can detect this by having more coverage over the one 
 #end of the gene compared to the other. You can visualize this by using geneBody_coverage.py:
 
@@ -109,18 +78,18 @@ geneBody_coverage.py -i  SRS*.bam -r /home/user7/RNAseq/db/hg38_RefSeq_chr21.bed
 
 #scp -p user7@antares.sa.gu.lcl:/home/user7/RNAseq/Alignment/geneBodyCoverage.geneBodyCoverage.curves.pdf .
 
+
+#=============================================================================================
+
 #Gene counts
 #The next step is to count the amount of reads aligned towards the genes in the reference genome so we can assess gene expression. 
 #Let's extract the gene counts for your alignment files of chr21.
 
-#There are multiple tools to extract the gene counts, here we will be using featureCounts, 
-#one program from the Subread package which comprises a suite of software programs for processing next-gen sequencing read data.
+#I will be using featureCounts 
+#It is a program from the Subread package which comprises a suite of software programs for processing next-gen sequencing read data.
 
 #Run featureCounts on your bam files.
 #Use Homo_sapiens.GRCh38.109.chr21.gtf as the reference gtf file, which contains the feature (exon/genes) coordinates in the reference genome.
-#Don't forget to set the flags for paired-end data and for unstranded data
-#Save the results in your Counts directory
-
 
 #featureCounts -p --countReadPairs -s FLAG_FOR_UNSTRANDED_DATA -t exon -a LOCATION_OF_YOUR_FILE/Homo_sapiens.GRCh38.109.chr21.gtf -o COUNTS_DIRECTORY/21.counts YOUR_BAM_FILES_SEPARATED_BY_SPACE
 
@@ -132,37 +101,31 @@ featureCounts -p --countReadPairs -s 0 -t exon -a /home/user7/RNAseq/db/Homo_sap
  #   1 or stranded: stranded data
  #   2 or reversely_stranded: reverse stranded data
 
-#For paired-end data, you include the -p option. For example:
+#For paired-end data, you include the -p option. 
+
+#================================================================================================================================
+#Analysis using R
+
 mkdir DESeq2
 #DESeq2, one of the statistical packages to perform DE analysis, needs a count matrix of the raw counts as input. 
 #A count matrix is a table where the columns represents the samples and the rows represents the genes. 
 #Create such a matrix from the count file from the featureCounts step.
 
-#copy the R things to my computer
-scp -p user7@antares.sa.gu.lcl:/home/user7/RNAseq/Counts/* .
+#scp -p user7@antares.sa.gu.lcl:/home/user7/RNAseq/Counts/* .
 
-scp -p user7@antares.sa.gu.lcl:/home/ftp_courses/NGS/RNAseq/forDE/* .
+#scp -p user7@antares.sa.gu.lcl:/home/ftp_courses/NGS/RNAseq/forDE/* .
 
-#Now you will use DESeq2, an R package that estimates variance-mean dependence in count data from high-throughput sequencing 
+#Now I will use DESeq2, an R package that estimates variance-mean dependence in count data from high-throughput sequencing 
 #assays and tests for differential expression based on a model using the negative binomial distribution. 
-#In this exercise you will try some different design options.
-#You have created a count matrix that contains only chr21. For this part of the analysis you will use the entire dataset.
-#Copy the files all_counts.txt and sample_description.txt from /home/ftp_courses/NGS/RNAseq/forDE/ to your local computer. Remember you can use scp <origin> <target>.
-#Start R in your local computer.
-#Select your working directory (where you have the all_counts.txt file) by clicking:
-#Session -> Set Working Directory -> Choose directory
+#I have created a count matrix that contains only chr21.
+
 #Load the DESeq2 package
 #Read the count data (all_counts.txt) and information about the samples (sample_description.txt)
 # loading library
 
 library(DESeq2)
-# Not installed? Run:
-# install.packages("ggplot2")
 library(ggplot2)
-# Not installed? Run: 
-# if (!require("BiocManager", quietly = TRUE))
-#    install.packages("BiocManager")
-#BiocManager::install("DESeq2")
+
 
 # reading data
 counts <- read.delim("all_counts.txt", row.names=1)
@@ -192,7 +155,7 @@ data.frame(colData(ds))
 dst <- DESeq(ds)                                         
 dst
 
-#==========================================================
+#================================================================================================================================
 
 #Transform the data using vst() (variance stabilizing transformation). This will make the data more suitable for clustering and visualization
 #Plot the results of the Principal Component Analysis,using plotPCA()
@@ -203,7 +166,7 @@ vsd <- vst(dst, blind=FALSE)
 # Plotting the PCA
 plotPCA(vsd, intgroup=c("patient", "treatment"))
 
-#============================================================
+#================================================================================================================================
 #You can customize the PCA plot, to better visualize the different sample
 
 # obtaining the PCA values
@@ -230,8 +193,6 @@ ggplot(pcaData, aes(PC1, PC2, color=treatment, shape=patient)) +
 sampleDists <- dist(t(assay(vsd)))
 
 suppressMessages(library("RColorBrewer"))
-# Not installed? Run:
-#install.packages("RColorBrewer")
 
 # Calculating distances
 sampleDistMatrix <- as.matrix(sampleDists)
@@ -244,8 +205,6 @@ colnames(sampleDistMatrix) <- rownames(sampleDistMatrix)
 colors <- colorRampPalette( rev(brewer.pal(9, "Blues")) )(255)
 
 suppressMessages(library(pheatmap))
-# Not installed? Run:
-# install.packages("pheatmap")
 
 # printing heatmap
 pheatmap(sampleDistMatrix,
@@ -271,8 +230,7 @@ head(res_DPN[order(res_DPN$padj),], 10)
 
 res_DPN$padj
 
-
-#Do the same visualization, but now extracting OHT_vs_Control. Hint: You can just replace each DPN in the code above with OHT
+#Do the same visualization, but now extracting OHT_vs_Control.
 
 res_OHT <-results(dst, name="treatment_OHT_vs_Control")
 head(res_OHT[order(res_OHT$padj),], 10)
@@ -312,7 +270,7 @@ hist(
 
 #Multifactor design
 
-#Now we will try to do a paired analysis instead, since we have information for the same patient for different treatments.
+#Now I will try to do a paired analysis instead, since we have information for the same patient for different treatments.
 
 # setting the design
 dsp <- DESeqDataSetFromMatrix(countData = counts, 
@@ -367,7 +325,7 @@ res_DPN_paired_sig <- res_DPN_paired[ which(res_DPN_paired$padj < 0.01), ]
 # checking data
 res_DPN_paired_sig
 
-#Follow the same procedure, and extract DPN_vs_Control (you can just replace each DPN in the code above with OHT)
+#Follow the same procedure, and extract DPN_vs_Control 
 res_OHT_paired <-results(dsp, name="treatment_OHT_vs_Control")  
 
 # selecting with 0.01 as threshold
@@ -383,10 +341,6 @@ intersect(rownames(res_DPN_paired_sig),rownames(res_OHT_paired_sig))
 
 
 #And make a graphical representation:
-
-# Not installed? 
-# install.packages("ggvenn") # install via CRAN
-
 library("ggvenn")
 
 # gene names
@@ -414,15 +368,12 @@ res_DPN_OHT_paired_sig
 #Generate an MA plot to visualize the log2 fold changes vs the mean normalized counts of all genes (dots in the plot), 
 #where a red dot shows statistically significant genes:
 
-
 plotMA(res_DPN_OHT_paired, 
        main="res_DPN_OHT_paired",
        cex=0.8, 
        ylim=c(-3,3))
 
-#Modify the ylim parameter so you include all the values. 
-#Hint: one way is to find the min/max values of the foldchanges: summary(res_DPN_OHT_paired$log2FoldChange)
-
+#================================================================================================================================
 #Make a list ordered by padj and then select the top 50 genes:
 
 top=50
@@ -482,58 +433,7 @@ pheatmap(res_DPN_OHT_paired_top2heatmap_Mean,
 
 
 
-#Repeat the visualization using the top 20 genes instead.
-
-topp=20
-
-# ordering based on padj
-
-
-# selecting the top 50
-res_DPN_OHT_paired_top_20 <- res_DPN_OHT_paired_order[1:topp,]
-
-#checking data
-res_DPN_OHT_paired_top_20
-
-# selecting data
-res_DPN_OHT_paired_top20heatmap <- assay(vsd)[rownames(assay(vsd))%in%rownames(res_DPN_OHT_paired_top_20),]
-
-# normalizing to the mean value
-res_DPN_OHT_paired_top20heatmap_Mean <- res_DPN_OHT_paired_top20heatmap - rowMeans(res_DPN_OHT_paired_top20heatmap)
-
-
-# printing heatmap
-pheatmap(res_DPN_OHT_paired_top20heatmap_Mean, 
-         main         = "res_DPN_OHT_paired top 20 genes (padj)",
-         cluster_cols = FALSE)
-
-#Add some annotation for an easier interpretation
-# Defining the annotation
-annotation_col <- data.frame(
-  Treatment = rep(c("Ctrl", "DPN", "OHT"),4),
-  Patient = rep(c("A1", "A2", "A3","A4"),3)
-)
-
-# Defining the colors by group for plotting 
-annotation_colors <- list(
-  Treatment = c(Ctrl= "red", 
-                DPN = "blue", 
-                OHT = "green"),
-  Patient = c(A1 = "yellow", 
-              A2 = "orange", 
-              A3 = "black", 
-              A4 = "grey")
-)
-
-rownames(annotation_col) = samples$sample
-
-pheatmap(res_DPN_OHT_paired_top20heatmap_Mean,
-         main              = "res_DPN_OHT_paired top 20 genes (padj)",
-         annotation_col    = annotation_col,
-         annotation_colors = annotation_colors, 
-         cluster_cols      = TRUE)
-
-#Visualize the counts of a specific gene grouped by treatment. In this case we are visualizing the gene with smallest padj:
+#Visualize the counts of a specific gene grouped by treatment. In this case I am visualizing the gene with smallest padj:
 
 # retrieving data with smallest padj
 d<-plotCounts (dsp, 
@@ -546,7 +446,7 @@ ggplot(d, aes(x=treatment, y=count, color=patient, shape=treatment)) +
   geom_point(position=position_jitter(w=0.1,h=0)) +
   scale_y_log10(breaks=c(25,100,400))
 
-  #Remember that you can save these results for processing outside R:
+  #It is possible to save these results for processing outside R:
 
   write.table(res_DPN_OHT_paired, 
             file      = "res_DPN_OHT_paired.txt", 
@@ -556,10 +456,13 @@ ggplot(d, aes(x=treatment, y=count, color=patient, shape=treatment)) +
             quote     = FALSE,
             na        = "NA")
 
-  #Functional analysis
+
+#================================================================================================================================
+
+#Functional analysis
 
 #A common downstream analysis is to find pathways linked to our significant gene list. 
-#Here we will perform an over-representation analysis using the package ReactomePA on the gene list where we compared DPN to OHT treatment.
+#Here I will perform an over-representation analysis using the package ReactomePA on the gene list where we compared DPN to OHT treatment.
 #We start by importing the result table from DESeq2 (in case you do the analysis at another time):
 
 # reading the data from a file
@@ -588,7 +491,7 @@ res_sig$Entrez <- mapIds(org.Hs.eg.db,
 head(res_sig)
 
 
-#We extract the fold changes of all the significant genes and we set the ENTREZ ids as name, 
+#I extract the fold changes of all the significant genes and we set the ENTREZ ids as name, 
 #saving them to a variable called ressigFC. There will be genes that lack and ENTREZ id, these are annotatied as NA. 
 #For the analysis to run properly, it is necessary to remove these genes.
 
@@ -602,8 +505,8 @@ names(ressigFC)<-res_sig$Entrez
 ressigFC<-ressigFC[!is.na(names(ressigFC))]
 length(ressigFC)
 
-#Then we run an over-representation analysis using enrichPathway(). This function uses a hypergeometric 
-#model to test if the amount of genes from the input list associated to the pathway is larger then expected. Read more here.
+#Then I run an over-representation analysis using enrichPathway(). This function uses a hypergeometric 
+#model to test if the amount of genes from the input list associated to the pathway is larger then expected. 
 
 # Running the test
 x <- enrichPathway(gene         = names(ressigFC),
@@ -635,7 +538,7 @@ write.table(x         = dfx,
             quote     = FALSE, 
             col.names = NA)
 
-#Let's plot the most significant pathways:
+#Plot of the most significant pathways:
 edox <- setReadable(x, 'org.Hs.eg.db', 'ENTREZID')
 
 p1 <- cnetplot(x, color.params=list(foldChange=ressigFC))
@@ -645,3 +548,7 @@ pdf("DPN_OHT_ReactomePA_Plots.pdf", height = 15, width= 15)
 p1
 p2
 dev.off()
+
+
+
+
