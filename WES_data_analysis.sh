@@ -1,3 +1,5 @@
+#This script was done following the hints from the NGS course https://github.com/bcfgothenburg/HT23/wiki/NGS-IV:-Exome
+
 ssh -Y user7@antares.sa.gu.lcl
 
 
@@ -37,6 +39,15 @@ mkdir Alignment
 
 #bwa-mem2 mem /home/user7/Exome/chr11.fa /home/user7/Exome/Trimgalore/Sample.fq  > Sample.bwa.sam
 
+#IMP in this step you can align the two AS_2 samples in the same step and the same for the AS_ctrl sample
+
+#reference="/home/user7/Exome/chr11.fa"
+#trim_dir="/home/user7/Exome/Trimgalore"
+
+#bwa mem -t 4 ${reference} ${trim_dir}/AS_2_trimmed.chr11.R1_trimmed.fq ${trim_dir}/AS_2_trimmed.chr11.R2_trimmed.fq > ${trim_dir}/AS_2_paired.sam
+#bwa mem -t 4 ${reference} ${trim_dir}/AS_ctrl_trimmed.chr11.R1_trimmed.fq ${trim_dir}/AS_ctrl_trimmed.chr11.R2_trimmed.fq > ${trim_dir}/AS_ctrl_paired.sam
+
+#Aligment using bwa-mem2
 reference="/home/user7/Exome/chr11.fa"
 trim_dir="/home/user7/Exome/Trimgalore"
 
@@ -305,7 +316,7 @@ multiqc "$output_dir"
 
 #scp -p user7@antares.sa.gu.lcl:/home/user7/Exome/Alignment/Duplicates/*multiqc* .
 
-#Base Quality Score Recalibration (BQSR)
+#Base Quality Score Recalibration (BQSR) => Build is a model
 #This pre-processing step detects systematic errors made by the sequencing machine when it estimates the accuracy of each base call. 
 #Most of the short variant calling tools rely on the base quality score, so it is important to correct these systematic technical errors.
 
@@ -362,7 +373,7 @@ done
 
 #=================================================================================================
 
-#Now let's correct the scores of the sample, running gatk ApplyBQSR for hte alignments
+#Now let's correct the scores of the sample, running gatk ApplyBQSR for the alignments
 
 #    -R                -> chr11_reference_file 
 #    -I                -> YOUR_SAMPLE.bwa.sort.fix.mkdup.bam 

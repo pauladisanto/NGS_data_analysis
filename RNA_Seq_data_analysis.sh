@@ -1,3 +1,5 @@
+#Script from the NGS course with minor modifications https://github.com/bcfgothenburg/HT23/wiki/NGS-V:-RNAseq
+
 ssh -Y user7@antares.sa.gu.lcl
 
 
